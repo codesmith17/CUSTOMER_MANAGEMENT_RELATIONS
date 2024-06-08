@@ -9,7 +9,7 @@ const bodyParser = require("body-parser");
 const authRoutes = require("./routes/Auth.route");;
 app.use(express.json());
 app.use(cors({
-    origin: 'http://localhost:5173', // Replace with your React app's URL
+    origin: 'http://localhost:5173',
     credentials: true
 }));
 // console.log(process.env.MONGODB_URI);
