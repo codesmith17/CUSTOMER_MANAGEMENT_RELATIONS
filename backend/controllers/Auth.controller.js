@@ -11,14 +11,14 @@ const verifyCustomer = (req, res, next) => {
     // console.log("!", req.headers)
 
     let token = req.headers && req.headers.cookie ? req.headers.cookie.split("access_token=")[1] : null;
-    const likes = "likes";
-    console.log("TOKEN:", req.headers.cookie);
-    const source = req.params ? req.params.source : null;
-    console.log(source);
-    if (!token && source === likes) {
-        next();
-        return;
-    }
+    // const likes = "likes";
+    // console.log("TOKEN:", req.headers.cookie);
+    // const source = req.params ? req.params.source : null;
+    // console.log(source);
+    // if (!token && source === likes) {
+    //     next();
+    //     return;
+    // }
 
     if (!token) {
         res.status(401).json({ message: "UNAUTHORIZED, LOGIN AGAIN WITH YOUR CREDENTIALS" });
@@ -38,7 +38,7 @@ const verifyCustomer = (req, res, next) => {
         }
         // console.log("user", decoded);
         req.user = user;
-        if (req.params.source === "login")
+        if (req.params.source === "signin")
             res.status(200).json({ message: "User verified.", data: req.user });
         next();
     });
