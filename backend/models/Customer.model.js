@@ -19,7 +19,8 @@ const CustomerSchema = new mongoose.Schema({
     phoneNumber: {
         type: String,
         required: true,
-        trim: true
+        trim: true,
+        unique: true
     },
     address: {
         type: String,
@@ -33,6 +34,23 @@ const CustomerSchema = new mongoose.Schema({
     resetToken: {
         type: String,
         required: false,
+        default: null
+    },
+    isAdmin: {
+        type: Boolean,
+        required: true,
+        default: false,
+    },
+    totalSpends: {
+        type: Number,
+        default: 0
+    },
+    visits: {
+        type: Number,
+        default: 0
+    },
+    lastVisit: {
+        type: Date,
         default: null
     }
 }, { timestamps: true });

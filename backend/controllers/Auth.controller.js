@@ -31,7 +31,7 @@ const verifyCustomer = (req, res, next) => {
         return res.status(403).json({ message: "No token provided." });
     }
     // console.log("123")
-    jwt.verify(token, jwtSecret, (error, user) => {
+    jwt.verify(token, process.env.JWT_SECRET, (error, user) => {
         if (error) {
             console.error("Token verification error: ", error);
             return res.status(500).json({ message: "Failed to authenticate token." });
@@ -43,6 +43,7 @@ const verifyCustomer = (req, res, next) => {
         next();
     });
 };
+
 
 
 
@@ -59,33 +60,38 @@ const signin = (req, res, next) => {
                 return res.status(404).json({ message: "User not found." });
             }
 
-            bcryptjs.compare(password, user.password, (error, isEqual) => {
-                if (error) {
-                    console.error("Password decryption failed.", error);
-                    return res.status(500).json({ message: "Internal server error." });
-                }
+            return bcryptjs.compare(password, user.password)
+                .then(isEqual => {
+                    if (!isEqual) {
+                        return res.status(401).json({ message: "Invalid credentials." });
+                    }
 
-                if (!isEqual) {
-                    return res.status(401).json({ message: "Invalid credentials." });
-                }
+                    user.visits += 1;
+                    return user.save()
+                        .then(updatedUser => {
+                            const token = jwt.sign({ id: updatedUser._id, email: email }, jwtSecret, {
+                                expiresIn: "24h",
+                            });
 
-                const token = jwt.sign({ id: user._id, email: email }, jwtSecret, {
-                    expiresIn: "24h",
+                            res.cookie("access_token", token, {
+                                httpOnly: true,
+                                maxAge: 24 * 60 * 60 * 1000, // 1 day
+                            }).status(200).json({
+                                message: "Authentication successful.",
+                                user: {
+                                    id: updatedUser._id,
+                                    email: updatedUser.email,
+                                    name: updatedUser.name,
+                                    access_token: token,
+                                    isAdmin: updatedUser.isAdmin
+                                },
+                            });
+                        });
+                })
+                .catch(err => {
+                    console.error("Password comparison failed.", err);
+                    res.status(500).json({ message: "Internal server error." });
                 });
-
-
-                res.cookie("access_token", token, {
-                    httpOnly: true,
-                    maxAge: 24 * 60 * 60 * 1000,
-                }).status(200).json({
-                    message: "Authentication successful.",
-                    user: {
-
-                        email: user.email,
-                        name: user.name,
-                    },
-                });
-            });
         })
         .catch(err => {
             console.error("Database query failed.", err);
@@ -97,10 +103,12 @@ const signin = (req, res, next) => {
 
 
 
-const signup = (req, res) => {
-    const { name, email, password, confirmPassword, phoneNumber, address, dateOfBirth } = req.body;
-    const checked = req.body.checked;
 
+
+
+const signup = (req, res) => {
+    const { name, email, password, confirmPassword, phoneNumber, address, dateOfBirth, checked } = req.body;
+    console.log(phoneNumber)
     if (!checked) {
         return res.status(401).json({ message: "YOU HAVE TO AGREE TO OUR TERMS AND CONDITIONS" });
     }
@@ -114,14 +122,16 @@ const signup = (req, res) => {
     if (password !== confirmPassword) {
         return res.status(401).json({ message: "Password and confirm password do not match." });
     }
+
     const parsedDateOfBirth = moment(dateOfBirth, "YYYY-MM-DD").toDate();
     if (!moment(parsedDateOfBirth).isValid()) {
         return res.status(400).json({ message: "Invalid date of birth format. Please use YYYY-MM-DD." });
     }
-    Customer.findOne({ email })
+
+    Customer.findOne({ $or: [{ email }, { phoneNumber }] })
         .then(customer => {
             if (customer) {
-                return res.status(401).json({ message: "This user already exists. Try with another email ID or username." });
+                return res.status(401).json({ message: "This user already exists. Try with another email ID or phone number." });
             }
 
             bcryptjs.hash(password, saltRounds, (err, hashedPassword) => {
@@ -138,7 +148,6 @@ const signup = (req, res) => {
                         address,
                         dateOfBirth: parsedDateOfBirth,
                         resToken: null
-
                     })
                     .then(newCustomer => {
                         res.status(201).json({
@@ -160,6 +169,7 @@ const signup = (req, res) => {
             res.status(500).json({ message: "Server error. Please try again later." });
         });
 };
+
 
 
 
