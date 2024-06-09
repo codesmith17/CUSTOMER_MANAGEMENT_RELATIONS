@@ -19,7 +19,7 @@ const verifyCustomer = (req, res, next) => {
     //     next();
     //     return;
     // }
-
+    console.log(token);
     if (!token) {
         res.status(401).json({ message: "UNAUTHORIZED, LOGIN AGAIN WITH YOUR CREDENTIALS" });
         return;
@@ -67,9 +67,10 @@ const signin = (req, res, next) => {
                     }
 
                     user.visits += 1;
+                    user.lastVisit = Date.now();
                     return user.save()
                         .then(updatedUser => {
-                            const token = jwt.sign({ id: updatedUser._id, email: email }, jwtSecret, {
+                            const token = jwt.sign({ id: updatedUser._id, email: email, isAdmin: updatedUser.isAdmin }, jwtSecret, {
                                 expiresIn: "24h",
                             });
 
@@ -79,13 +80,13 @@ const signin = (req, res, next) => {
                             }).status(200).json({
                                 message: "Authentication successful.",
                                 user: {
-                                    id: updatedUser._id,
-                                    email: updatedUser.email,
+
+
                                     name: updatedUser.name,
                                     access_token: token,
-                                    isAdmin: updatedUser.isAdmin
+
                                 },
-                            });
+                            })
                         });
                 })
                 .catch(err => {

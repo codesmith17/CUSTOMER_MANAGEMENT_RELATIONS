@@ -56,6 +56,7 @@ const SigninForm = () => {
         localStorage.setItem("firstTime", true);
         console.log(data);
         document.cookie = `access_token=${data.user.access_token}; path=/`;
+        toast.success(`WELCOME ${data.user.name}`);
         navigate("/products");
       })
       .catch((err) => {

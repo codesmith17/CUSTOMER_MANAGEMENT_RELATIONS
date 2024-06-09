@@ -1,0 +1,207 @@
+/* CustomerFilterPage.module.css */
+
+@import url('https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&display=swap');
+
+:root {
+    --bg-color: #1a1a1a;
+    --content-bg: #232323;
+    --text-color: #e0e0e0;
+    --primary-color: #6366f1;
+    --input-bg: #2d2d2d;
+    --input-border: #3f3f3f;
+    --card-bg: #282828;
+    --card-hover: #303030;
+    --btn-color: #f59e0b;
+    --btn-hover: #d97706;
+}
+
+body {
+    font-family: 'Inter', sans-serif;
+    background-color: var(--bg-color);
+    color: var(--text-color);
+}
+
+.filterContainer {
+    min-height: 100vh;
+    display: flex;
+    justify-content: center;
+    align-items: flex-start;
+    padding: 2rem;
+}
+
+.filterContent {
+    background-color: var(--content-bg);
+    padding: 2.5rem;
+    border-radius: 12px;
+    box-shadow: 0 4px 30px rgba(0, 0, 0, 0.2);
+    width: 100%;
+    max-width: 600px;
+    animation: fadeIn 0.6s ease-out;
+    position: relative;
+}
+
+@keyframes fadeIn {
+    from {
+        opacity: 0;
+        transform: translateY(-20px);
+    }
+
+    to {
+        opacity: 1;
+        transform: translateY(0);
+    }
+}
+
+.filterTitle {
+    font-size: 2rem;
+    font-weight: 700;
+    color: var(--primary-color);
+    margin-bottom: 2rem;
+    text-align: center;
+}
+
+.searchBar {
+    position: relative;
+    margin-bottom: 1.5rem;
+}
+
+.searchIcon {
+    position: absolute;
+    left: 1rem;
+    top: 50%;
+    transform: translateY(-50%);
+    color: #707070;
+    font-size: 1.1rem;
+    pointer-events: none;
+}
+
+.searchInput {
+    width: 100%;
+    padding: 1rem 1rem 1rem 2.8rem;
+    background-color: var(--input-bg);
+    border: 1px solid var(--input-border);
+    border-radius: 6px;
+    color: var(--text-color);
+    font-size: 0.95rem;
+    transition: border-color 0.3s, box-shadow 0.3s;
+}
+
+.searchInput:focus {
+    border-color: var(--primary-color);
+    box-shadow: 0 0 0 3px rgba(99, 102, 241, 0.2);
+    outline: none;
+}
+
+.filterInfo {
+    position: absolute;
+    top: 2.5rem;
+    right: 2.5rem;
+    display: flex;
+    align-items: center;
+}
+
+.filterIcon {
+    font-size: 1.5rem;
+    color: var(--btn-color);
+}
+
+.filterText {
+    color: var(--btn-color);
+    font-size: 1rem;
+    font-weight: 600;
+    margin-left: 0.5rem;
+}
+
+.situationsContainer {
+    margin-top: 2rem;
+}
+
+.situationsTitle {
+    font-size: 1.3rem;
+    font-weight: 600;
+    margin-bottom: 1.5rem;
+    color: var(--primary-color);
+    text-align: center;
+}
+
+.situationLabel {
+    display: block;
+    margin: 1.5rem 0;
+    font-size: 1rem;
+    cursor: pointer;
+    padding: 1rem;
+    background-color: var(--card-bg);
+    border-radius: 6px;
+    transition: background-color 0.3s;
+}
+
+.situationLabel:hover {
+    background-color: var(--card-hover);
+}
+
+.situationCheckbox {
+    margin-right: 0.75rem;
+    accent-color: var(--btn-color);
+    cursor: pointer;
+    transform: scale(1.2);
+}
+
+.logicContainer {
+    display: flex;
+    justify-content: center;
+    gap: 2rem;
+    margin: 1rem 0;
+}
+
+.logicLabel {
+    font-size: 0.95rem;
+    cursor: pointer;
+    display: flex;
+    align-items: center;
+    padding: 0.5rem 1rem;
+    background-color: var(--input-bg);
+    border-radius: 4px;
+    transition: background-color 0.3s;
+}
+
+.logicLabel:hover {
+    background-color: var(--input-border);
+}
+
+.logicRadio {
+    margin-right: 0.5rem;
+    accent-color: var(--btn-color);
+    cursor: pointer;
+}
+
+.applyBtn {
+    background-color: var(--btn-color);
+    color: #1a1a1a;
+    border: none;
+    border-radius: 6px;
+    padding: 0.75rem;
+    font-size: 1rem;
+    font-weight: 600;
+    cursor: pointer;
+    transition: background-color 0.3s, transform 0.2s;
+    margin-top: 2rem;
+    width: 100%;
+    text-transform: uppercase;
+    letter-spacing: 0.05em;
+}
+
+.applyBtn:hover {
+    background-color: var(--btn-hover);
+    transform: scale(1.05);
+}
+
+@media (max-width: 768px) {
+    .filterContent {
+        padding: 1.5rem;
+    }
+
+    .filterInfo {
+        top: 1.5rem;
+        right: 1.5rem;
+    }
+}

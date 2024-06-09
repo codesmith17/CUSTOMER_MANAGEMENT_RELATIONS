@@ -32,8 +32,43 @@ const ProductsPage = () => {
         product.price * 83.53
       ).toFixed(0)}`
     );
-    if (result) toast.success(`Order placed for ${product.title}!`);
-    else toast.info("ORDER CANCELLED");
+    console.log(product);
+    if (result) {
+      fetch("http://localhost:3000/api/order/postOrder", {
+        method: "POST",
+        headers: {
+          "Content-Type": "application/json",
+        },
+        credentials: "include",
+        body: JSON.stringify({
+          productName: product.title,
+          price: (product.price * 83.53).toFixed(0),
+        }),
+      })
+        .then((response) => {
+          // console.log(response);
+          if (!response.ok) {
+            throw new Error("INTERNAL SERVER ERROR");
+          }
+          return response.json();
+        })
+        .then((data) => {
+          console.log(data);
+          if (data && data.newOrder) {
+            // console.log(data);
+            toast.success(`Order placed for ${data.newOrder.productName}!`);
+          } else if (
+            data.message === "UNAUTHORIZED, LOGIN AGAIN WITH YOUR CREDENTIALS"
+          ) {
+            throw new Error(data.message);
+          }
+          return;
+        })
+        .catch((error) => {
+          console.error("Error placing order:", error.message);
+          toast.error("Failed to place order. Please try again later.");
+        });
+    } else toast.info("ORDERING CANCELLED");
     return;
   };
 

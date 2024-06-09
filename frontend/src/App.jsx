@@ -6,6 +6,7 @@ import SignupForm from "./components/SignupForm";
 import SigninForm from "./components/SigninForm";
 import OrdersPage from "./components/OrdersPage.jsx";
 import ProductsPage from "./components/ProductsPage.jsx";
+import CustomerFilterPage from "./components/CustomerFilterPage.jsx";
 // import SigninForm from './components/SigninForm'; // Uncomment this line if you have a SigninForm component
 
 const App = () => {
@@ -16,6 +17,7 @@ const App = () => {
         <Route path="/signin" element={<SigninForm />} />
         <Route path="/signup" element={<SignupForm />} />
         <Route path="/products" element={<ProductsPage />} />
+        <Route path="/filter" element={<CustomerFilterPage />} />
         {/* Add more routes as needed */}
       </Routes>
     </Router>
