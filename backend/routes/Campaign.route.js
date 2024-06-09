@@ -6,7 +6,7 @@ const { campaignFilter } = require("../controllers/Campaign.controller.js");
 
 
 
-router.post("/campaignFilter", campaignFilter);
+router.post("/campaign-filter", campaignFilter);
 
 // router.get("/getOthersData/:username", getOthersData);
 // router.get("/getUserData", verifyUser, getUserData);

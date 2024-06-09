@@ -1,4 +1,4 @@
-import React, { useState } from "react";
+import React, { useState, useEffect } from "react";
 import styles from "./CustomerFilterPage.module.css";
 import { FaFilter } from "react-icons/fa";
 import { toast } from "react-toastify";
@@ -21,6 +21,9 @@ const CustomerFilterPage = () => {
     maxVisits: 3,
     notVisitedMonths: 3,
   });
+  const [customerCount, setCustomerCount] = useState(0);
+  const [isLoading, setIsLoading] = useState(false);
+  const [frequency, setFrequency] = useState(null);
 
   const handleSituationChange = (e) => {
     setSituations({ ...situations, [e.target.name]: e.target.checked });
@@ -56,10 +59,10 @@ const CustomerFilterPage = () => {
     }
   };
 
-  const applyFilter = () => {
-    const selectedSituations = Object.keys(situations).filter((key) => {
-      return situations[key] === true;
-    });
+  const applyFilter = async () => {
+    const selectedSituations = Object.keys(situations).filter(
+      (key) => situations[key]
+    );
 
     if (selectedSituations.length === 0) {
       toast.warning("Please select at least one situation.");
@@ -67,11 +70,7 @@ const CustomerFilterPage = () => {
     }
 
     let message = "Filtering customers who ";
-    const situationTexts = [];
-    const logicArray = [];
-    for (let i = 0; i < selectedSituations.length; i++) {
-      situationTexts.push(getSituationText(selectedSituations[i]));
-    }
+    const situationTexts = selectedSituations.map(getSituationText);
 
     for (let i = 0; i < situationTexts.length - 1; i++) {
       const logicNumber = Math.floor(
@@ -79,14 +78,64 @@ const CustomerFilterPage = () => {
           Number(selectedSituations[i + 1].at(-1))) /
           2
       );
-      message += situationTexts[i];
-      message += " ";
-      message += logic[`logic${logicNumber}`];
-      logicArray.push(logic[`logic${logicNumber}`]);
-      message += " ";
+      message += `${situationTexts[i]} ${logic[`logic${logicNumber}`]} `;
     }
     message += situationTexts.at(-1);
     toast.info(message);
+
+    setIsLoading(true);
+    try {
+      const response = await fetch(
+        "http://localhost:3000/api/campaign/campaign-filter",
+        {
+          method: "POST",
+          headers: {
+            "Content-Type": "application/json",
+          },
+          body: JSON.stringify({ situations, logic, filterValues }),
+        }
+      );
+
+      if (!response.ok) {
+        throw new Error(`HTTP error! status: ${response.status}`);
+      }
+
+      const data = await response.json();
+      setCustomerCount(data.count);
+      console.log(data);
+    } catch (error) {
+      console.error("Error fetching customer count:", error);
+      toast.error("Error fetching customer count. Please try again.");
+    } finally {
+      setIsLoading(false);
+    }
+  };
+
+  const calculateFrequency = async () => {
+    setIsLoading(true);
+    try {
+      const response = await fetch("/api/calculate-frequency", {
+        method: "POST",
+        headers: {
+          "Content-Type": "application/json",
+        },
+        body: JSON.stringify({ situations, logic, filterValues }),
+      });
+
+      if (!response.ok) {
+        throw new Error(`HTTP error! status: ${response.status}`);
+      }
+
+      const data = await response.json();
+
+      setFrequency(data.frequency);
+      toast.success("Frequency calculated successfully!");
+    } catch (error) {
+      console.error("Error calculating frequency:", error);
+      toast.error("Error calculating frequency. Please try again.");
+    } finally {
+      setIsLoading(false);
+    }
   };
 
   return (
@@ -250,10 +299,34 @@ const CustomerFilterPage = () => {
           </label>
         </div>
 
-        <button onClick={applyFilter} className={styles.applyBtn}>
-          Apply Filters
+        <button
+          onClick={applyFilter}
+          className={styles.applyBtn}
+          disabled={isLoading}
+        >
+          {isLoading ? "Loading..." : "Apply Filters"}
         </button>
-        <button className={styles.applyBtn}>Calculate Frequency</button>
+        <button
+          onClick={calculateFrequency}
+          className={styles.applyBtn}
+          disabled={isLoading}
+        >
+          {isLoading ? "Loading..." : "Calculate Frequency"}
+        </button>
+
+        {customerCount > 0 && (
+          <div className={styles.resultContainer}>
+            <h3 className={styles.resultTitle}>Filtered Customers:</h3>
+            <p className={styles.resultText}>{customerCount}</p>
+          </div>
+        )}
+
+        {frequency !== null && (
+          <div className={styles.resultContainer}>
+            <h3 className={styles.resultTitle}>Average Visit Frequency:</h3>
+            <p className={styles.resultText}>{frequency} days</p>
+          </div>
+        )}
       </div>
     </div>
   );
