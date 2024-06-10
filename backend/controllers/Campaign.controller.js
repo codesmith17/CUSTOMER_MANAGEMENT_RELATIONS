@@ -1,4 +1,3 @@
-const Order = require("../models/Order.model.js");
 const Customer = require("../models/Customer.model.js");
 
 const campaignFilter = (req, res, next) => {

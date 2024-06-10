@@ -14,6 +14,7 @@ const CustomerFilterPage = () => {
     logic1: "AND",
     logic2: "AND",
   });
+  const [slicedArrayLength, setSlicedArrayLength] = useState(10);
   const [filterValues, setFilterValues] = useState({
     spendOperator1: ">",
     spendAmount1: 10000,
@@ -39,7 +40,13 @@ const CustomerFilterPage = () => {
     const { name, value } = e.target;
     setFilterValues({ ...filterValues, [name]: value });
   };
-
+  const incrementSliceSize = () => {
+    if (slicedArrayLength + 10 < tempTableData.length) {
+      setSlicedArrayLength(slicedArrayLength + 10);
+    } else {
+      setSlicedArrayLength(tempTableData.length);
+    }
+  };
   const getSituationText = (situation) => {
     const {
       spendOperator1,
@@ -138,7 +145,7 @@ const CustomerFilterPage = () => {
       })
       .then((data) => {
         setAudienceCount(data.count);
-        toast.success("Audience count calculated successfully!");
+        toast.success(`Audience count = ${data.count}`);
         setIsLoading(false);
         return;
       })
@@ -333,16 +340,18 @@ const CustomerFilterPage = () => {
               data={
                 tempTableData.length <= 10
                   ? tempTableData
-                  : tempTableData.slice(0, 10)
+                  : tempTableData.slice(0, slicedArrayLength)
               }
             />
-            {tempTableData.length > 10 && (
-              <div>
-                <p className={styles.showMeMore}>
-                  ... and {tempTableData.length - 10} more rows.
-                </p>
-              </div>
-            )}
+            {tempTableData.length > 10 &&
+              tempTableData.length - slicedArrayLength > 0 && (
+                <div>
+                  <p className={styles.showMeMore} onClick={incrementSliceSize}>
+                    ... and {tempTableData.length - slicedArrayLength} more
+                    rows.
+                  </p>
+                </div>
+              )}
             <button className={styles.applyBtn} disabled={isLoading}>
               {`SAVE TABLE OF SIZE ${tempTableData.length} TO COMM. LOGS`}
             </button>

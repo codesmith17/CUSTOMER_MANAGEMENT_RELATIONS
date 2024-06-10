@@ -2,6 +2,10 @@
 
 /* CustomerTable.module.css */
 
+.tableWrapper {
+    overflow-x: auto;
+}
+
 .customersTable {
     width: 100%;
     border-collapse: collapse;

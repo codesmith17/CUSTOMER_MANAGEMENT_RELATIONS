@@ -8,14 +8,14 @@ import OrdersPage from "./components/OrdersPage.jsx";
 import ProductsPage from "./components/ProductsPage.jsx";
 import CustomerFilterPage from "./components/CustomerFilterPage.jsx";
 // import SigninForm from './components/SigninForm'; // Uncomment this line if you have a SigninForm component
-import FilteredCustomers from "./components/FilteredCustomers.jsx";
+// import FilteredCustomers from "./components/FilteredCustomers.jsx";
 const App = () => {
   return (
     <Router>
       <Routes>
         {/* <Route path="/" element={<SigninForm />} /> */}
         <Route path="/signin" element={<SigninForm />} />
-        <Route path="/filtered-customers" element={<FilteredCustomers />} />
+        {/* <Route path="/filtered-customers" element={<FilteredCustomers />} /> */}
         <Route path="/signup" element={<SignupForm />} />
         <Route path="/products" element={<ProductsPage />} />
         <Route path="/filter" element={<CustomerFilterPage />} />
