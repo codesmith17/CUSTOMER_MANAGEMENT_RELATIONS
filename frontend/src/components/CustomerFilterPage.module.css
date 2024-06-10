@@ -1,6 +1,33 @@
-/* CustomerFilterPage.module.css */
-
 @import url('https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&display=swap');
+
+/* CustomerTable.module.css */
+
+.customersTable {
+    width: 100%;
+    border-collapse: collapse;
+    margin-top: 20px;
+    overflow-x: auto;
+}
+
+.showMeMore:hover {
+    text-decoration: underline;
+    text-decoration-color: white;
+    cursor: pointer;
+}
+
+.customersTable th,
+.customersTable td {
+    border: 1px solid #ddd;
+    padding: 8px;
+    text-align: left;
+}
+
+.customersTable th {
+    padding-top: 12px;
+    padding-bottom: 12px;
+    background-color: #f2f2f2;
+    color: black;
+}
 
 :root {
     --bg-color: #1a1a1a;
@@ -15,6 +42,34 @@
     --btn-hover: #d97706;
 }
 
+#customers {
+    font-family: Arial, Helvetica, sans-serif;
+    border-collapse: collapse;
+    width: 100%;
+}
+
+#customers td,
+#customers th {
+    border: 1px solid #ddd;
+    padding: 8px;
+}
+
+#customers tr:nth-child(even) {
+    background-color: #f2f2f2;
+}
+
+#customers tr:hover {
+    background-color: #ddd;
+}
+
+#customers th {
+    padding-top: 12px;
+    padding-bottom: 12px;
+    text-align: left;
+    background-color: #04AA6D;
+    color: white;
+}
+
 body {
     font-family: 'Inter', sans-serif;
     background-color: var(--bg-color);
@@ -27,6 +82,39 @@ body {
     justify-content: center;
     align-items: flex-start;
     padding: 2rem;
+}
+
+.situationLabel {
+    display: flex;
+    align-items: center;
+    margin: 1.5rem 0;
+    padding: 1rem;
+    background-color: var(--card-bg);
+    border-radius: 6px;
+    transition: background-color 0.3s, border-color 0.3s;
+}
+
+.situationLabel:hover {
+    background-color: var(--card-hover);
+}
+
+.filterInput {
+    width: 80px;
+    /* Adjust the width as needed */
+    margin-left: 0.75rem;
+    padding: 0.5rem;
+    background-color: var(--input-bg);
+    border: 1px solid var(--input-border);
+    border-radius: 4px;
+    color: var(--text-color);
+    font-size: 0.95rem;
+    transition: border-color 0.3s, box-shadow 0.3s;
+}
+
+.filterInput:focus {
+    border-color: var(--primary-color);
+    box-shadow: 0 0 0 3px rgba(99, 102, 241, 0.2);
+    outline: none;
 }
 
 .filterContent {

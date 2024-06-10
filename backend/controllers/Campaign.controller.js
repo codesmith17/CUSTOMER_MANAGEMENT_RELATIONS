@@ -1,13 +1,15 @@
 const Order = require("../models/Order.model.js");
 const Customer = require("../models/Customer.model.js");
 
-const campaignFilter = async(req, res, next) => {
+const campaignFilter = (req, res, next) => {
     const { situations, logic, filterValues } = req.body;
-    console.log(req.body);
+
+    console.log(req.body, "123");
     const {
-        spendAmount,
-        spendOperator,
-        spendAmountSecond,
+        spendAmount1,
+        spendOperator1,
+        spendAmount2,
+        spendOperator2,
         visitOperator,
         maxVisits,
         notVisitedMonths,
@@ -19,102 +21,85 @@ const campaignFilter = async(req, res, next) => {
         "=": "$eq",
     };
 
-    const countPipeline = [];
-    const dataPipeline = [];
+    let query = {};
 
     // Situation 1
     if (situations.situation1) {
-        countPipeline.push({
-            $match: {
-                totalSpends: {
-                    [spendOperatorMap[spendOperator]]: parseInt(spendAmount, 10),
-                },
-            },
-        });
+        query.totalSpends = {
+            [spendOperatorMap[spendOperator1]]: parseInt(spendAmount1, 10),
+        };
     }
 
     // Situation 2
     if (situations.situation2) {
-        const situation2Match = {
-            $match: {
-                $and: [{
-                        visits: {
-                            [visitOperator === "max" ? "$lte" : "$gte"]: parseInt(maxVisits, 10),
-                        },
-                    },
-                    {
-                        totalSpends: {
-                            [spendOperatorMap[spendOperator]]: parseInt(spendAmountSecond, 10),
-                        },
-                    },
-                ],
+        const situation2Query = {
+            visits: {
+                [visitOperator === "max" ? "$lte" : "$gte"]: parseInt(maxVisits, 10),
+            },
+            totalSpends: {
+                [spendOperatorMap[spendOperator2]]: parseInt(spendAmount2, 10),
             },
         };
 
         if (situations.situation1) {
-            const combinedMatch = {
-                $match: {
-                    [logic.logic1 === "AND" ? "$and" : "$or"]: [
-                        countPipeline[0].$match,
-                        situation2Match.$match,
-                    ],
-                },
+            query = {
+                [logic.logic1 === "AND" ? "$and" : "$or"]: [query, situation2Query],
             };
-            countPipeline.splice(0, countPipeline.length);
-            countPipeline.push(combinedMatch);
         } else {
-            countPipeline.push(situation2Match);
+            query = situation2Query;
         }
     }
 
     // Situation 3
     if (situations.situation3) {
-        const notVisitedDate = new Date();
-        notVisitedDate.setMonth(notVisitedDate.getMonth() - parseInt(notVisitedMonths, 10));
 
-        const situation3Match = {
-            $match: {
-                lastVisit: { $lt: notVisitedDate },
-            },
+
+
+
+
+        // Step 1: Subtract the specified number of months from the current date
+        const todaysDate = new Date();
+        todaysDate.setMonth(todaysDate.getMonth() - notVisitedMonths);
+
+
+
+        // Step 3: Create a MongoDB query to find documents where lastVisit is before this date
+        const situation3Query = {
+            lastVisit: { $lt: todaysDate },
         };
 
-        if (countPipeline.length > 0) {
-            const logicOperator = situations.situation2 ? logic.logic2 : logic.logic1;
 
-            const combinedMatch = {
-                $match: {
-                    [logicOperator === "AND" ? "$and" : "$or"]: [
-                        countPipeline[countPipeline.length - 1].$match,
-                        situation3Match.$match,
-                    ],
-                },
+
+        if (Object.keys(query).length > 0) {
+            const logicOperator = logic.logic2;
+
+            query = {
+                [logicOperator === "AND" ? "$and" : "$or"]: [query, situation3Query],
             };
-            countPipeline[countPipeline.length - 1] = combinedMatch;
         } else {
-            countPipeline.push(situation3Match);
+            query = situation3Query;
         }
     }
-
-    if (countPipeline.length === 0) {
-        return res.status(400).json({ error: "No situations selected" });
+    console.log(query);
+    if (Object.keys(query).length === 0) {
+        res.status(204).json({ data: [] });
     }
 
-    dataPipeline.push(...countPipeline);
 
-    console.log(dataPipeline);
 
-    try {
-        const countResult = await Customer.aggregate(countPipeline);
-        const dataResult = await Customer.aggregate(dataPipeline);
-
-        const count = countResult.length > 0 ? countResult.length : 0;
-        const data = dataResult;
-
-        res.json({ count, customers: data });
-    } catch (error) {
-        console.error("Error fetching customers:", error);
-        res.status(500).json({ error: "Internal Server Error" });
-    }
+    Customer.find(query)
+        .then(customers => {
+            if (customers.length > 0) {
+                res.status(201).json({ data: customers, count: customers.length });
+            } else {
+                console.log(customers);
+                res.status(204).json({ data: customers, count: customers.length });
+            }
+        })
+        .catch(err => {
+            console.error("INTERNAL SERVER ERROR", err);
+            res.status(500).json({ message: "ERROR FINDING FILTERED CUSTOMERS" });
+        });
 };
 
 module.exports = { campaignFilter };

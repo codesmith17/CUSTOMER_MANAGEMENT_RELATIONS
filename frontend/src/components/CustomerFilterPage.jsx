@@ -1,7 +1,8 @@
-import React, { useState, useEffect } from "react";
+import React, { useState } from "react";
 import styles from "./CustomerFilterPage.module.css";
 import { FaFilter } from "react-icons/fa";
 import { toast } from "react-toastify";
+import CustomerTable from "./CustomerTable";
 
 const CustomerFilterPage = () => {
   const [situations, setSituations] = useState({
@@ -14,17 +15,18 @@ const CustomerFilterPage = () => {
     logic2: "AND",
   });
   const [filterValues, setFilterValues] = useState({
-    spendOperator: ">",
-    spendAmount: 10000,
-    spendAmountSecond: 10000,
+    spendOperator1: ">",
+    spendAmount1: 10000,
+    spendOperator2: ">",
+    spendAmount2: 10000,
     visitOperator: "max",
     maxVisits: 3,
     notVisitedMonths: 3,
   });
-  const [customerCount, setCustomerCount] = useState(0);
+  const [audienceCount, setAudienceCount] = useState(0);
   const [isLoading, setIsLoading] = useState(false);
-  const [frequency, setFrequency] = useState(null);
-
+  const [filterDone, setFilterDone] = useState(false);
+  const [tempTableData, setTempTableData] = useState(null);
   const handleSituationChange = (e) => {
     setSituations({ ...situations, [e.target.name]: e.target.checked });
   };
@@ -40,18 +42,19 @@ const CustomerFilterPage = () => {
 
   const getSituationText = (situation) => {
     const {
-      spendOperator,
-      spendAmount,
-      spendAmountSecond,
+      spendOperator1,
+      spendAmount1,
+      spendOperator2,
+      spendAmount2,
       visitOperator,
       maxVisits,
       notVisitedMonths,
     } = filterValues;
     switch (situation) {
       case "situation1":
-        return `have spent ${spendOperator} INR ${spendAmount}`;
+        return `have spent ${spendOperator1} INR ${spendAmount1}`;
       case "situation2":
-        return `have ${visitOperator} number of visits = ${maxVisits} and spent ${spendOperator} INR ${spendAmountSecond}`;
+        return `have ${visitOperator} number of visits = ${maxVisits} and spent ${spendOperator2} INR ${spendAmount2}`;
       case "situation3":
         return `have not visited in the last ${notVisitedMonths} months`;
       default:
@@ -59,10 +62,10 @@ const CustomerFilterPage = () => {
     }
   };
 
-  const applyFilter = async () => {
-    const selectedSituations = Object.keys(situations).filter(
-      (key) => situations[key]
-    );
+  const applyFilter = () => {
+    const selectedSituations = Object.keys(situations).filter((key) => {
+      return situations[key] === true;
+    });
 
     if (selectedSituations.length === 0) {
       toast.warning("Please select at least one situation.");
@@ -84,58 +87,69 @@ const CustomerFilterPage = () => {
     toast.info(message);
 
     setIsLoading(true);
-    try {
-      const response = await fetch(
-        "http://localhost:3000/api/campaign/campaign-filter",
-        {
-          method: "POST",
-          headers: {
-            "Content-Type": "application/json",
-          },
-          body: JSON.stringify({ situations, logic, filterValues }),
+    setAudienceCount(0);
+    fetch("http://localhost:3000/api/campaign/campaign-filter", {
+      method: "POST",
+      headers: {
+        "Content-Type": "application/json",
+      },
+      body: JSON.stringify({ situations, logic, filterValues }),
+    })
+      .then((response) => {
+        if (!response.ok) {
+          throw new Error(`HTTP error! status: ${response.status}`);
         }
-      );
-
-      if (!response.ok) {
-        throw new Error(`HTTP error! status: ${response.status}`);
-      }
-
-      const data = await response.json();
-      setCustomerCount(data.count);
-      console.log(data);
-    } catch (error) {
-      console.error("Error fetching customer count:", error);
-      toast.error("Error fetching customer count. Please try again.");
-    } finally {
-      setIsLoading(false);
-    }
+        console.log(response);
+        if (response.status === 204) {
+          toast.info("NO AUDIENCE FOUND");
+          return;
+        }
+        return response.json();
+      })
+      .then((data) => {
+        console.log(data.data);
+        setTempTableData(data.data);
+        setFilterDone(true);
+        return;
+      })
+      .catch((err) => {
+        console.error("Error applying filter:", err);
+        toast.error("Error applying filter. Please try again.");
+      })
+      .finally(() => {
+        setIsLoading(false);
+      });
   };
 
-  const calculateFrequency = async () => {
+  const calculateFrequency = () => {
     setIsLoading(true);
-    try {
-      const response = await fetch("/api/calculate-frequency", {
-        method: "POST",
-        headers: {
-          "Content-Type": "application/json",
-        },
-        body: JSON.stringify({ situations, logic, filterValues }),
+    fetch("http://localhost:3000/api/campaign/campaign-filter", {
+      method: "POST",
+      headers: {
+        "Content-Type": "application/json",
+      },
+      body: JSON.stringify({ situations, logic, filterValues }),
+    })
+      .then((response) => {
+        if (!response.ok) {
+          throw new Error(`HTTP error! status: ${response.status}`);
+        }
+        return response.json();
+      })
+      .then((data) => {
+        setAudienceCount(data.count);
+        toast.success("Audience count calculated successfully!");
+        setIsLoading(false);
+        return;
+      })
+      .catch((error) => {
+        console.error("Error calculating audiences' frequency:", error);
+        toast.error(
+          "Error calculating audiences' frequency. Please try again."
+        );
+        setIsLoading(false);
+        return;
       });
-
-      if (!response.ok) {
-        throw new Error(`HTTP error! status: ${response.status}`);
-      }
-
-      const data = await response.json();
-
-      setFrequency(data.frequency);
-      toast.success("Frequency calculated successfully!");
-    } catch (error) {
-      console.error("Error calculating frequency:", error);
-      toast.error("Error calculating frequency. Please try again.");
-    } finally {
-      setIsLoading(false);
-    }
   };
 
   return (
@@ -161,8 +175,8 @@ const CustomerFilterPage = () => {
             />
             Customers with Total Spends{" "}
             <select
-              name="spendOperator"
-              value={filterValues.spendOperator}
+              name="spendOperator1"
+              value={filterValues.spendOperator1}
               onChange={handleFilterValueChange}
             >
               <option value=">">{`>`}</option>
@@ -172,8 +186,8 @@ const CustomerFilterPage = () => {
             INR{" "}
             <input
               type="number"
-              name="spendAmount"
-              value={filterValues.spendAmount}
+              name="spendAmount1"
+              value={filterValues.spendAmount1}
               onChange={handleFilterValueChange}
               className={styles.filterInput}
             />
@@ -233,8 +247,8 @@ const CustomerFilterPage = () => {
             />
             and spent{" "}
             <select
-              name="spendOperator"
-              value={filterValues.spendOperator}
+              name="spendOperator2"
+              value={filterValues.spendOperator2}
               onChange={handleFilterValueChange}
             >
               <option value=">">{`>`}</option>
@@ -244,8 +258,8 @@ const CustomerFilterPage = () => {
             INR{" "}
             <input
               type="number"
-              name="spendAmountSecond"
-              value={filterValues.spendAmountSecond}
+              name="spendAmount2"
+              value={filterValues.spendAmount2}
               onChange={handleFilterValueChange}
               className={styles.filterInput}
             />
@@ -313,18 +327,31 @@ const CustomerFilterPage = () => {
         >
           {isLoading ? "Loading..." : "Calculate Frequency"}
         </button>
-
-        {customerCount > 0 && (
-          <div className={styles.resultContainer}>
-            <h3 className={styles.resultTitle}>Filtered Customers:</h3>
-            <p className={styles.resultText}>{customerCount}</p>
-          </div>
+        {filterDone && (
+          <>
+            <CustomerTable
+              data={
+                tempTableData.length <= 10
+                  ? tempTableData
+                  : tempTableData.slice(0, 10)
+              }
+            />
+            {tempTableData.length > 10 && (
+              <div>
+                <p className={styles.showMeMore}>
+                  ... and {tempTableData.length - 10} more rows.
+                </p>
+              </div>
+            )}
+            <button className={styles.applyBtn} disabled={isLoading}>
+              {`SAVE TABLE OF SIZE ${tempTableData.length} TO COMM. LOGS`}
+            </button>
+          </>
         )}
-
-        {frequency !== null && (
+        {audienceCount !== 0 && (
           <div className={styles.resultContainer}>
-            <h3 className={styles.resultTitle}>Average Visit Frequency:</h3>
-            <p className={styles.resultText}>{frequency} days</p>
+            <h3 className={styles.resultTitle}>AUDIENCE SIZE</h3>
+            <p className={styles.resultText}>{audienceCount}</p>
           </div>
         )}
       </div>
