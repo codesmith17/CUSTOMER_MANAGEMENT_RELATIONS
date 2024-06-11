@@ -3,6 +3,7 @@ import styles from "./CustomerFilterPage.module.css";
 import { FaFilter } from "react-icons/fa";
 import { toast } from "react-toastify";
 import CustomerTable from "./CustomerTable";
+import { useNavigate } from "react-router-dom";
 
 const CustomerFilterPage = () => {
   const [situations, setSituations] = useState({
@@ -15,6 +16,7 @@ const CustomerFilterPage = () => {
     logic2: "AND",
   });
   const [slicedArrayLength, setSlicedArrayLength] = useState(10);
+  const navigate = useNavigate();
   const [filterValues, setFilterValues] = useState({
     spendOperator1: ">",
     spendAmount1: 10000,
@@ -334,6 +336,12 @@ const CustomerFilterPage = () => {
         >
           {isLoading ? "Loading..." : "Calculate Frequency"}
         </button>
+        {audienceCount !== 0 && (
+          <div className={styles.resultContainer}>
+            <h3 className={styles.resultTitle}>AUDIENCE SIZE</h3>
+            <p className={styles.resultText}>{audienceCount}</p>
+          </div>
+        )}
         {filterDone && (
           <>
             <CustomerTable
@@ -352,16 +360,16 @@ const CustomerFilterPage = () => {
                   </p>
                 </div>
               )}
-            <button className={styles.applyBtn} disabled={isLoading}>
+            <button
+              className={styles.applyBtn}
+              disabled={isLoading}
+              onClick={() => {
+                navigate("/filter-table", { state: tempTableData });
+              }}
+            >
               {`SAVE TABLE OF SIZE ${tempTableData.length} TO COMM. LOGS`}
             </button>
           </>
-        )}
-        {audienceCount !== 0 && (
-          <div className={styles.resultContainer}>
-            <h3 className={styles.resultTitle}>AUDIENCE SIZE</h3>
-            <p className={styles.resultText}>{audienceCount}</p>
-          </div>
         )}
       </div>
     </div>

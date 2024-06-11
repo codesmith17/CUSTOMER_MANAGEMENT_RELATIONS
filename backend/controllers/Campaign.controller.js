@@ -1,5 +1,5 @@
 const Customer = require("../models/Customer.model.js");
-
+const communicationLogs = require("../models/CommunicationLogs.model.js")
 const campaignFilter = (req, res, next) => {
     const { situations, logic, filterValues } = req.body;
 
@@ -100,5 +100,40 @@ const campaignFilter = (req, res, next) => {
             res.status(500).json({ message: "ERROR FINDING FILTERED CUSTOMERS" });
         });
 };
+const getFilteredTable = async(req, res) => {
+    try {
+        const filteredTable = await communicationLogs.find().sort({ _id: -1 }); // Sort by _id in descending order
+        res.json(filteredTable);
+    } catch (err) {
+        console.error(err);
+        res.status(500).json({ message: 'Internal server error' });
+    }
+};
+const postFilteredTable = (req, res, next) => {
+    const { data, message, discountPercentage } = req.body;
+    const audience = data.map(customer => ({
+        customerEmail: customer.email,
+        customerName: customer.name
+    }));
 
-module.exports = { campaignFilter };
+    const personalizedMessage = message.replace("${discountPercentage}", discountPercentage);
+    const newLog = {
+        audience,
+        message: personalizedMessage,
+        discountPercentage,
+        date: Date.now()
+    };
+
+    const communicationLog = new communicationLogs(newLog);
+
+    communicationLog.save()
+        .then(savedLog => {
+            res.status(201).json({ message: "Communication log saved successfully", log: savedLog });
+        })
+        .catch(err => {
+            console.error("Error saving communication log:", err);
+            res.status(500).json({ message: "Error saving communication log" });
+        });
+};
+
+module.exports = { campaignFilter, postFilteredTable, getFilteredTable };

@@ -1,27 +1,29 @@
 // src/App.jsx
 
 import React from "react";
-import { BrowserRouter as Router, Routes, Route } from "react-router-dom";
+import { BrowserRouter, Routes, Route } from "react-router-dom";
 import SignupForm from "./components/SignupForm";
 import SigninForm from "./components/SigninForm";
-import OrdersPage from "./components/OrdersPage.jsx";
-import ProductsPage from "./components/ProductsPage.jsx";
-import CustomerFilterPage from "./components/CustomerFilterPage.jsx";
-// import SigninForm from './components/SigninForm'; // Uncomment this line if you have a SigninForm component
-// import FilteredCustomers from "./components/FilteredCustomers.jsx";
+import DisplayFilterTable from "./components/DisplayFilterTable";
+import ProductsPage from "./components/ProductsPage";
+import CustomerFilterPage from "./components/CustomerFilterPage";
+import AdminSigninForm from "./components/AdminSignIn";
+
 const App = () => {
   return (
-    <Router>
+    <BrowserRouter>
       <Routes>
-        {/* <Route path="/" element={<SigninForm />} /> */}
         <Route path="/signin" element={<SigninForm />} />
-        {/* <Route path="/filtered-customers" element={<FilteredCustomers />} /> */}
         <Route path="/signup" element={<SignupForm />} />
-        <Route path="/products" element={<ProductsPage />} />
-        <Route path="/filter" element={<CustomerFilterPage />} />
-        {/* Add more routes as needed */}
+        <Route path="/products" element={<ProductsPage />} />{" "}
+        <Route path="/hiddenForAdmin/signin" element={<AdminSigninForm />} />{" "}
+        <Route path="/hiddenForAdmin/filter" element={<CustomerFilterPage />} />
+        <Route
+          path="/hiddenForAdmin/filter-table"
+          element={<DisplayFilterTable />}
+        />
       </Routes>
-    </Router>
+    </BrowserRouter>
   );
 };
 

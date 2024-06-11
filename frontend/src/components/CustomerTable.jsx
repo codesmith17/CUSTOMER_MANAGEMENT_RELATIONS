@@ -3,7 +3,7 @@ import styles from "./CustomerFilterPage.module.css";
 
 const CustomerTable = ({ data }) => {
   const tableHeaders = [
-    "ID",
+    "CUSTOMER_ID",
     "Email",
     "Total Spends",
     "Is Admin",
