@@ -5,7 +5,7 @@ import { Link, useNavigate } from "react-router-dom";
 import styles from "./SigninForm.module.css";
 import { toast } from "react-toastify";
 import { FaEnvelope, FaLock } from "react-icons/fa";
-
+import { signInWithGooglePopup } from "../utils/firbase.utils";
 const AdminSigninForm = () => {
   const navigate = useNavigate();
   const [firstTime, setFirstTime] = useState(false);
@@ -43,9 +43,7 @@ const AdminSigninForm = () => {
       return;
     }
 
-    const url = isAdmin
-      ? "http://localhost:3000/api/auth/admin/signin"
-      : "http://localhost:3000/api/auth/signin";
+    const url = "http://localhost:3000/api/auth/signin";
 
     fetch(url, {
       method: "POST",
@@ -65,7 +63,7 @@ const AdminSigninForm = () => {
         console.log(data);
         document.cookie = `access_token=${data.user.access_token}; path=/`;
         toast.success(`WELCOME ${data.user.name}`);
-        navigate(isAdmin ? "/admin/dashboard" : "/products");
+        navigate("/hiddenForAdmin/filter");
       })
       .catch((err) => {
         console.error("Error:", err);
@@ -75,7 +73,44 @@ const AdminSigninForm = () => {
 
   const handleGoogleSignin = () => {
     // Implement Google sign-in logic here
-    console.log("Google sign-in clicked");
+    // const response = await signInWithGooglePopup();
+    signInWithGooglePopup().then((response) => {
+      let currentEmail = response.user.email;
+      if (!response.user.emailVerified) {
+        toast.error("EMAIL CANT BE VERIFIED");
+        return;
+      }
+      fetch("http://localhost:3000/api/auth/signin/google", {
+        method: "POST",
+        headers: {
+          "Content-Type": "application/json",
+        },
+        body: JSON.stringify({
+          email: currentEmail,
+        }),
+      })
+        .then((res) => {
+          console.log(res);
+          if (!res.ok) {
+            throw new Error("Invalid email or password");
+          }
+          return res.json();
+        })
+        .then((data) => {
+          localStorage.setItem("firstTime", true);
+          console.log(data);
+          document.cookie = `access_token=${data.user.access_token}; path=/`;
+          toast.success(`WELCOME ${data.user.name}`);
+          navigate("/hiddenForAdmin/filter");
+        })
+        .catch((err) => {
+          console.error("Error:", err);
+          toast.error(err.message);
+        });
+    });
+
+    // console.log("Google sign-in clicked");
+    return;
   };
 
   return (

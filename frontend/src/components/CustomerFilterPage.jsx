@@ -1,4 +1,4 @@
-import React, { useState } from "react";
+import React, { useState, useEffect } from "react";
 import styles from "./CustomerFilterPage.module.css";
 import { FaFilter } from "react-icons/fa";
 import { toast } from "react-toastify";
@@ -160,7 +160,31 @@ const CustomerFilterPage = () => {
         return;
       });
   };
-
+  useEffect(() => {
+    fetch("http://localhost:3000/api/auth/verifyAdmin", {
+      method: "GET",
+      headers: {
+        "Content-Type": "application/json",
+      },
+      credentials: "include",
+    })
+      .then((res) => {
+        if (!res.ok) {
+          navigate("/hiddenForAdmin/signin");
+          toast.error("SIGNIN FIRST USING CREDENTIALS");
+        }
+        return res.json();
+      })
+      .then((res) => {
+        if (!res.user.isAdmin) {
+          navigate("/hiddenForAdmin/signin");
+          toast.error("SIGNIN FIRST USING CREDENTIALS");
+        }
+      })
+      .catch((err) => {
+        throw new error(err);
+      });
+  }, []);
   return (
     <div className={styles.filterContainer}>
       <div className={styles.filterContent}>
@@ -364,7 +388,9 @@ const CustomerFilterPage = () => {
               className={styles.applyBtn}
               disabled={isLoading}
               onClick={() => {
-                navigate("/filter-table", { state: tempTableData });
+                navigate("/hiddenForAdmin/filter-table", {
+                  state: tempTableData,
+                });
               }}
             >
               {`SAVE TABLE OF SIZE ${tempTableData.length} TO COMM. LOGS`}

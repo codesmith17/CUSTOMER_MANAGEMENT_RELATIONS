@@ -1,4 +1,4 @@
-import React, { useState } from "react";
+import React, { useState, useEffect } from "react";
 import styles from "./DisplayFilterTable.module.css";
 import CustomerTable2 from "./CustomerTable2";
 import { useLocation } from "react-router-dom";
@@ -12,7 +12,7 @@ const DisplayFilterTable = () => {
   const location = useLocation();
   const data = location.state;
   //   console.log(data);
-  console.log(customerData);
+  //   console.log(customerData);
   const handleMessageChange = (e) => {
     setMessage(e.target.value);
   };
@@ -20,7 +20,32 @@ const DisplayFilterTable = () => {
   const handleDiscountChange = (e) => {
     setDiscountPercentage(e.target.value);
   };
-
+  useEffect(() => {
+    fetch("http://localhost:3000/api/auth/verifyAdmin", {
+      method: "GET",
+      headers: {
+        "Content-Type": "application/json",
+      },
+      credentials: "include",
+    })
+      .then((res) => {
+        console.log(res);
+        if (!res.ok) {
+          navigate("/hiddenForAdmin/signin");
+          toast.error("SIGNIN FIRST USING CREDENTIALS");
+        }
+        return res.json();
+      })
+      .then((res) => {
+        if (!res.user.isAdmin) {
+          navigate("/hiddenForAdmin/signin");
+          toast.error("SIGNIN FIRST USING CREDENTIALS");
+        }
+      })
+      .catch((err) => {
+        throw new error(err);
+      });
+  }, []);
   const handleSubmit = () => {
     if (message === "" || !message) {
       toast.error("MESSAGE CANNOT BE EMPTY!");
@@ -30,7 +55,11 @@ const DisplayFilterTable = () => {
       toast.error("MESSAGE SHOULD INCLUDE ${discountPercentage}");
       return;
     }
-
+    if (discountPercentage >= 100 || discountPercentage < 1) {
+      setDiscountPercentage(1);
+      toast.error("DISCOUNT PERCENTAGE IS BETWEEN 1 AND 100");
+      return;
+    }
     fetch("http://localhost:3000/api/campaign/postFilteredTable", {
       method: "POST",
       headers: {

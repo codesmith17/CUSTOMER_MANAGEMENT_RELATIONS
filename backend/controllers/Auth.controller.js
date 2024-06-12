@@ -7,6 +7,23 @@ const jwt = require("jsonwebtoken");
 // const nodemailer = require("nodemailer")
 // const crypto = require("crypto-js");
 const bcryptjs = require('bcrypt');
+const verifyAdmin = (req, res, next) => {
+    let token = req.headers && req.headers.cookie ? req.headers.cookie.split("access_token=")[1] : null;
+    if (!token) {
+        res.status(401).json({ message: "UNAUTHORIZED, LOGIN AGAIN WITH YOUR CREDENTIALS" });
+        return;
+    }
+    jwt.verify(token, process.env.JWT_SECRET, (error, user) => {
+        if (error) {
+            console.error("Token verification error: ", error);
+            return res.status(500).json({ message: "Failed to authenticate token." });
+        }
+        req.user = user;
+        res.status(201).json({ user });
+        return;
+    })
+    return;
+}
 const verifyCustomer = (req, res, next) => {
     // console.log("!", req.headers)
 
@@ -51,55 +68,68 @@ const signin = (req, res, next) => {
     const { email, password } = req.body;
 
     if (!email || !password || email.trim() === "" || password.trim() === "") {
-        return res.status(400).json({ message: "Email and password are required." });
+        if (!req.params || !req.params.source === "google")
+            return res.status(400).json({ message: "Email and password are required." });
     }
-
+    console.log(req.body);
     Customer.findOne({ email })
         .then(user => {
             if (!user) {
                 return res.status(404).json({ message: "User not found." });
             }
 
-            return bcryptjs.compare(password, user.password)
-                .then(isEqual => {
-                    if (!isEqual) {
-                        return res.status(401).json({ message: "Invalid credentials." });
-                    }
+            if (req.params && req.params.source === "google") {
+                user.visits += 1;
+                user.lastVisit = Date.now();
+                return user.save().then(updatedUser => {
+                    const token = jwt.sign({ id: updatedUser._id, email: email, isAdmin: updatedUser.isAdmin }, jwtSecret, {
+                        expiresIn: "24h",
+                    });
 
-                    user.visits += 1;
-                    user.lastVisit = Date.now();
-                    return user.save()
-                        .then(updatedUser => {
+                    return res.cookie("access_token", token, {
+                        httpOnly: true,
+                        maxAge: 24 * 60 * 60 * 1000, // 1 day
+                    }).status(200).json({
+                        message: "Authentication successful.",
+                        user: {
+                            name: updatedUser.name,
+                            access_token: token,
+                        },
+                    });
+                });
+            } else {
+                return bcryptjs.compare(password, user.password)
+                    .then(isEqual => {
+                        if (!isEqual) {
+                            return res.status(401).json({ message: "Invalid credentials." });
+                        }
+
+                        user.visits += 1;
+                        user.lastVisit = Date.now();
+                        return user.save().then(updatedUser => {
                             const token = jwt.sign({ id: updatedUser._id, email: email, isAdmin: updatedUser.isAdmin }, jwtSecret, {
                                 expiresIn: "24h",
                             });
 
-                            res.cookie("access_token", token, {
+                            return res.cookie("access_token", token, {
                                 httpOnly: true,
                                 maxAge: 24 * 60 * 60 * 1000, // 1 day
                             }).status(200).json({
                                 message: "Authentication successful.",
                                 user: {
-
-
                                     name: updatedUser.name,
                                     access_token: token,
-
                                 },
-                            })
+                            });
                         });
-                })
-                .catch(err => {
-                    console.error("Password comparison failed.", err);
-                    res.status(500).json({ message: "Internal server error." });
-                });
+                    });
+            }
         })
         .catch(err => {
-            console.error("Database query failed.", err);
-            next(err);
+            console.error("Error during authentication.", err);
+            return res.status(500).json({ message: "Internal server error." });
         });
 };
-
 
 
 
@@ -175,4 +205,4 @@ const signup = (req, res) => {
 
 
 
-module.exports = { signin, verifyCustomer, signup, };
+module.exports = { signin, verifyCustomer, signup, verifyAdmin };

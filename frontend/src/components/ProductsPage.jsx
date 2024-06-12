@@ -3,11 +3,11 @@ import React, { useState, useEffect } from "react";
 import styles from "./ProductsPage.module.css";
 import { FaSearch, FaTruck } from "react-icons/fa";
 import { toast } from "react-toastify";
-
+import { useNavigate } from "react-router-dom";
 const ProductsPage = () => {
   const [products, setProducts] = useState([]);
   const [searchTerm, setSearchTerm] = useState("");
-
+  const navigate = useNavigate();
   useEffect(() => {
     fetch("https://dummyjson.com/products?limit=12")
       .then((res) => res.json())
@@ -48,6 +48,10 @@ const ProductsPage = () => {
         .then((response) => {
           // console.log(response);
           if (!response.ok) {
+            if (response.status === 401) {
+              navigate("/signin");
+              throw new Error("SIGN IN WITH YOUR CREDENTIALS");
+            }
             throw new Error("INTERNAL SERVER ERROR");
           }
           return response.json();
@@ -71,6 +75,7 @@ const ProductsPage = () => {
     } else toast.info("ORDERING CANCELLED");
     return;
   };
+  // console.log(products);
 
   const filteredProducts = products.filter((product) =>
     product.title.toLowerCase().includes(searchTerm.toLowerCase())
