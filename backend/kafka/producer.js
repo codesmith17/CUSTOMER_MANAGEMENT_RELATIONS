@@ -15,7 +15,7 @@ const connectProducer = () => {
         })
         .catch((error) => {
             console.error('Error connecting Kafka producer:', error);
-            throw error; // Optionally, you can throw the error to handle it further up the call stack
+            throw error;
         });
 };
 
@@ -29,7 +29,7 @@ const publishOrderToKafka = (order) => {
         })
         .catch((error) => {
             console.error('Error publishing order to Kafka:', error);
-            throw error; // Optionally, you can throw the error to handle it further up the call stack
+            throw error;
         });
 };
 const publishDeliveryStatusToKafka = (deliveryStatus) => {

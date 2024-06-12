@@ -1,6 +1,18 @@
 const DeliveryStatus = require('../models/DeliveryStatus.model');
 const { publishDeliveryStatusToKafka } = require('../kafka/producer');
+const getDeliveryTable = async(req, res) => {
 
+    DeliveryStatus.find().sort({ _id: -1 })
+        .then(filteredTable => {
+            if (filteredTable.length > 0) {
+                res.status(201).json(filteredTable);
+            }
+        }).catch(err => {
+            console.error(err);
+            res.status(500).json({ message: 'Internal server error' });
+        })
+
+};
 const postDeliveryStatus = (req, res, next) => {
     const { customerId, campaignId, message, customerEmail } = req.body;
 
@@ -34,4 +46,4 @@ const postDeliveryStatus = (req, res, next) => {
         });
 };
 
-module.exports = { postDeliveryStatus };
+module.exports = { postDeliveryStatus, getDeliveryTable };

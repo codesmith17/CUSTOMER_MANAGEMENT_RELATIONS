@@ -1,4 +1,3 @@
-// orderConsumer.js
 const { Kafka } = require('kafkajs');
 const Order = require('../models/Order.model');
 require('dotenv').config();
@@ -18,7 +17,7 @@ const startOrderConsumer = () => {
         })
         .then(() => {
             return consumer.run({
-                eachMessage: async({ topic, partition, message }) => {
+                eachMessage: ({ topic, partition, message }) => {
                     const order = JSON.parse(message.value.toString());
                     console.log('Received order:', order);
 

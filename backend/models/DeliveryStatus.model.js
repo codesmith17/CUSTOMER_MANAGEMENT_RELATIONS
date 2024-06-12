@@ -1,11 +1,7 @@
 const mongoose = require('mongoose');
 
 const DeliveryStatusSchema = new mongoose.Schema({
-    customerId: {
-        type: mongoose.Types.ObjectId,
-        ref: 'Customer',
-        required: true
-    },
+
     campaignId: {
         type: mongoose.Types.ObjectId,
         ref: 'communication_logs',

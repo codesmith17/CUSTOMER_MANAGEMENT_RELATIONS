@@ -3,11 +3,14 @@ import styles from "./DisplayFilterTable.module.css";
 import CustomerTable2 from "./CustomerTable2";
 import { useLocation } from "react-router-dom";
 import { toast } from "react-toastify";
-
+import DeliveryStatusTable from "./DeliveryStatusTable";
+import DeliveryStats from "./DeliveryStats";
 const DisplayFilterTable = () => {
   const [message, setMessage] = useState("");
   const [discountPercentage, setDiscountPercentage] = useState("");
   const [showTable, setShowTable] = useState(false); // State to toggle table display
+  const [showDeliveryTable, setShowDeliveryTable] = useState(false);
+  const [deliveryData, setDeliveryData] = useState(null);
   const [customerData, setCustomerData] = useState(null); // State to store customer data
   const location = useLocation();
   const data = location.state;
@@ -87,13 +90,36 @@ const DisplayFilterTable = () => {
         toast.error("Error submitting customer data");
       });
   };
-
+  const fetchDeliveryTable = () => {
+    if (showDeliveryTable) {
+      setShowDeliveryTable(false);
+      return;
+    }
+    setShowDeliveryTable(true);
+    setShowTable(false);
+    fetch("http://localhost:3000/api/delivery/getDeliveryTable")
+      .then((response) => {
+        if (response.ok) {
+          return response.json();
+        } else {
+          throw new Error("Failed to fetch customer data");
+        }
+      })
+      .then((data) => {
+        setDeliveryData(data);
+        setShowDeliveryTable(true);
+      })
+      .catch((error) => {
+        console.error("Error fetching filtered table:", error);
+        toast.error("Error fetching filtered table");
+      });
+  };
   const fetchFilteredTable = () => {
     if (showTable) {
       setShowTable(false);
       return;
     }
-
+    setShowDeliveryTable(false);
     fetch("http://localhost:3000/api/campaign/getFilteredTable")
       .then((response) => {
         if (response.ok) {
@@ -138,10 +164,22 @@ const DisplayFilterTable = () => {
         </button>
         <button onClick={fetchFilteredTable} className={styles.submitButton}>
           {showTable
-            ? "HIDE CUSTOMER TABLE"
+            ? "HIDE COMMUNICATION LOGS"
             : "DISPLAY CURRENT COMMUNICATION LOGS"}
         </button>
-
+        <button onClick={fetchDeliveryTable} className={styles.submitButton}>
+          {showDeliveryTable
+            ? "HIDE DELIVERY STATUS"
+            : "DISPLAY DELIVERY STATUS"}
+        </button>
+        {showDeliveryTable && deliveryData && (
+          <>
+            <DeliveryStats deliveryData={deliveryData} />
+            <div className={styles.tableWrapper}>
+              <DeliveryStatusTable data={deliveryData} />
+            </div>
+          </>
+        )}
         {showTable && customerData && (
           <div className={styles.tableWrapper}>
             <CustomerTable2 data={customerData} />

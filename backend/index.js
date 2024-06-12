@@ -47,6 +47,6 @@ const deliveryRoutes = require("./routes/DeliveryStatus.route.js")
 app.use('/api/auth', authRoutes);
 app.use('/api/order', orderRoutes);
 app.use('/api/campaign', campaignRoutes);
-app.use("/api/delivery", deliveryRoutes)
+app.use("/api/delivery", deliveryRoutes);
 
 module.exports = app;

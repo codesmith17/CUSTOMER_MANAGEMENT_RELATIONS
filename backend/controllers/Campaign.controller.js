@@ -102,13 +102,16 @@ const campaignFilter = (req, res, next) => {
 };
 const getFilteredTable = async(req, res) => {
     try {
-        const filteredTable = await communicationLogs.find().sort({ _id: -1 }); // Sort by _id in descending order
+        const filteredTable = await communicationLogs.find().sort({ _id: -1 });
+        āāāāā
         res.json(filteredTable);
     } catch (err) {
         console.error(err);
         res.status(500).json({ message: 'Internal server error' });
     }
 };
+
+
 const postFilteredTable = (req, res, next) => {
     const { data, message, discountPercentage } = req.body;
     const audience = data.map(customer => ({
@@ -125,15 +128,45 @@ const postFilteredTable = (req, res, next) => {
     };
 
     const communicationLog = new communicationLogs(newLog);
-
     communicationLog.save()
         .then(savedLog => {
             res.status(201).json({ message: "Communication log saved successfully", log: savedLog });
+
+            // Send delivery status for each customer in the audience
+            audience.forEach(single => {
+                const personalizedMessage = message
+                    .replace("${name}", single.customerName);
+
+                const deliveryStatusBody = {
+                    customerId: single.customerId,
+                    campaignId: savedLog._id,
+                    message: personalizedMessage,
+                    customerEmail: single.customerEmail
+                };
+
+                fetch("http://localhost:3000/api/delivery/deliveryStatus", {
+                        method: "POST",
+                        headers: {
+                            "Content-Type": "application/json"
+                        },
+                        body: JSON.stringify(deliveryStatusBody)
+                    })
+                    .then(response => response.json())
+                    .then(data => {
+                        console.log(`Delivery status for ${single.customerEmail} saved successfully`, data);
+                    })
+                    .catch(err => {
+                        console.error(`Error saving delivery status for ${single.customerEmail}:`, err);
+                    });
+            });
         })
         .catch(err => {
             console.error("Error saving communication log:", err);
             res.status(500).json({ message: "Error saving communication log" });
         });
 };
+
+
+
 
 module.exports = { campaignFilter, postFilteredTable, getFilteredTable };
